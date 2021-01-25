@@ -1,0 +1,28 @@
+---
+metrics:
+  - name: requests_status
+    type: gauge
+    help: 'status of requests'
+    value: count
+    database: yandex
+    collection: request
+    constLabels:
+      - type: yandex
+        status: finished
+    realtime: false
+    pipeline: |
+      [
+        { "$project": {
+            "state": {
+              "$cond": [
+                  { "$eq": [ "$done", true ] }, 1, 0
+              ]
+            }
+          }
+        },
+        { "$group": {
+            "_id": {},
+            "count": {"$sum": "$state"}
+          }
+        }
+      ]

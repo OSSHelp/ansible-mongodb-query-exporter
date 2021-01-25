@@ -1,0 +1,19 @@
+[Unit]
+Description=mongodb_query_exporter
+
+[Service]
+Type=simple
+User={{ mongodb_exporter_user_name }}
+Group={{ mongodb_exporter_group_name }}
+RuntimeDirectory={{ mongodb_exporter_service_name }}
+RuntimeDirectoryMode=0755
+
+ExecStart=/sbin/start-stop-daemon -Smp /run/{{ mongodb_exporter_service_name  }}/{{ mongodb_exporter_service_name  }}.pid -x {{ mongodb_exporter_dirs.binary_dir }}/{{ mongodb_exporter_binary_name }} -- --config {{ mongodb_exporter_dirs.config_dir }}/{{ mongodb_exporter_config_file }}
+Restart=always
+
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier={{ mongodb_exporter_service_name }}
+
+[Install]
+WantedBy=multi-user.target

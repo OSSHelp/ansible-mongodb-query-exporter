@@ -1,0 +1,63 @@
+---
+
+- name: create group
+  group:
+    name: "{{ mongodb_exporter_group_name }}"
+    system: true
+    state: present
+
+- name: create user
+  user:
+    name: "{{ mongodb_exporter_user_name }}"
+    home: "/nonexistent"
+    create_home: no
+    shell: "/bin/false"
+    system: yes
+
+- name: check if binary file exists
+  stat:
+    path: "{{ mongodb_exporter_dirs.binary_dir }}/{{ mongodb_exporter_binary_name }}"
+  register: binary_file
+
+- name: "download binary to {{ mongodb_exporter_dirs.binary_dir }}"
+  get_url:
+    url: "{{ mongodb_exporter_download_url }}"
+    dest: "{{ mongodb_exporter_dirs.binary_dir }}/{{ mongodb_exporter_binary_name }}"
+    owner: root
+    group: "{{ mongodb_exporter_group_name }}"
+    mode: 0750
+  when: not binary_file.stat.exists
+
+- name: create config dir
+  file:
+    path: "{{ mongodb_exporter_dirs.config_dir }}"
+    state: directory
+
+- name: read custom config
+  set_fact:
+    mongodb_exporter_metrics_section: "{{ lookup('file', '{{ mongodb_exporter_metrics_config }}') | default(false) }}"
+  when: mongodb_exporter_metrics_config is defined
+
+- name: create main config
+  template:
+    src: mongodb_exporter_cfg.j2
+    dest: "{{ mongodb_exporter_dirs.config_dir }}/{{ mongodb_exporter_config_file }}"
+    owner: root
+    group: "{{ mongodb_exporter_user_name }}"
+    mode: 0640
+  notify: restart mongodb_query_exporter service
+
+- name: create systemd unit
+  template:
+    src: mongodb_exporter.service.j2
+    dest: "{{ mongodb_exporter_systemd_unit }}"
+  notify:
+    - reload mongodb_query_exporter unit
+    - restart mongodb_query_exporter service
+
+- meta: flush_handlers
+
+- name: enable service
+  systemd:
+    name: "{{ mongodb_exporter_service_name }}"
+    enabled: true

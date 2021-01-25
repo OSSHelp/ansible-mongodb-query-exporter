@@ -1,0 +1,23 @@
+---
+mongodb_exporter_version: 'latest'
+mongodb_exporter_download_url: "https://oss.help/builds/pub/exporters/mongodb-query-exporter/{{ mongodb_exporter_version }}/mongodb_query_exporter"
+
+mongodb_exporter_config_file: mongodb_query_exporter.yml
+mongodb_exporter_user_name: mongodb_query_exporter
+mongodb_exporter_group_name: "{{ mongodb_exporter_user_name }}"
+mongodb_exporter_binary_name: mongodb_query_exporter
+mongodb_exporter_service_name: mongodb_query_exporter
+mongodb_exporter_systemd_unit: "/etc/systemd/system/{{ mongodb_exporter_service_name }}.service"
+
+mongodb_exporter_dirs:
+  binary_dir: /usr/local/bin
+  config_dir: /usr/local/etc/mongodb_query_exporter
+
+mongodb_exporter_params:
+  bind: '0.0.0.0:9412'
+  logLevel: info
+  mongodb:
+    uri: 'mongodb://127.0.0.1:27017'
+    connectionTimeout: 10
+    maxConnection: 3
+    defaultCacheTime: 15
